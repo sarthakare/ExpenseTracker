@@ -1,13 +1,14 @@
 import { useState } from "react";
 import axios from "axios";
-import { useNavigate } from "react-router-dom"; // Ensure this is imported
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 function RegisterUser() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const navigate = useNavigate(); // Initialize useNavigate here
+  const navigate = useNavigate();
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -19,8 +20,8 @@ function RegisterUser() {
         email,
         password,
       });
-      alert("Registration successful! You can now log in.");
-      navigate("/login"); // Redirect to login page after successful registration
+      toast("Registration successful.");
+      navigate("/projects");
     } catch (err) {
       if (err.response && err.response.data) {
         setError(err.response.data.detail || "Registration failed!");

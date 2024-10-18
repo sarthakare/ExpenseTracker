@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 
 from database import SessionLocal, create_tables
-from models import User
-from schemas import UserCreate
+from models import User, Projects
+from schemas import UserCreate, ProjectCreate
 
 # FastAPI app
 app = FastAPI()
@@ -78,40 +78,16 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     access_token = create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
 
-# Get all users
-@app.get("/users/")
-def read_all_users(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
-    return db.query(User).offset(skip).limit(limit).all()
-
-# Get a specific user
-@app.get("/users/{user_id}")
-def read_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
-
-# Delete a user
-@app.delete("/users/{user_id}")
-def delete_user(user_id: int, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.id == user_id).first()
-    if user is None:
-        raise HTTPException(status_code=404, detail="User not found")
-    db.delete(user)
+# Projects Creation
+@app.post("/projects/")
+def create_projects(project: ProjectCreate, db: Session = Depends(get_db)):
+    db_project = Projects(
+        project_name=project.project_name, 
+        project_admin_id=project.project_admin_id, 
+        start_date=project.start_date, 
+        end_date=project.end_date
+    )
+    db.add(db_project)
     db.commit()
-    return {"message": "User deleted"}
-
-# Secured route to get user information
-@app.get("/me/")
-def read_users_me(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_email: str = payload.get("sub")
-        if user_email is None:
-            raise HTTPException(status_code=401, detail="Invalid authentication credentials")
-        user = db.query(User).filter(User.email == user_email).first()
-        if user is None:
-            raise HTTPException(status_code=404, detail="User not found")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Could not validate credentials")
-    return user
+    db.refresh(db_project)
+    return db_project

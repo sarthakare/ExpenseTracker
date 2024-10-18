@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
 
 function Login() {
   const [email, setEmail] = useState("");
@@ -10,7 +11,6 @@ function Login() {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      // Use FormData to send form-encoded data
       const formData = new URLSearchParams();
       formData.append("username", email); // OAuth2PasswordRequestForm expects 'username' as the key
       formData.append("password", password);
@@ -20,35 +20,41 @@ function Login() {
         formData,
         {
           headers: {
-            "Content-Type": "application/x-www-form-urlencoded", // Set the appropriate header
+            "Content-Type": "application/x-www-form-urlencoded",
           },
         }
       );
 
       localStorage.setItem("token", response.data.access_token);
-      alert("Login successful!");
-      navigate("/create_project");
+      toast("Login successful!");
+      navigate("/projects");
     } catch (error) {
-      alert("Login failed! " + error);
+      toast("Login failed! " + error);
     }
   };
 
   return (
     <>
-    
+      <h2>Login User</h2>
       <form onSubmit={handleLogin}>
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-        />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-        />
+        <div>
+          <label>Email:</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="Email"
+          />
+        </div>
+        <div>
+          <label>Password:</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Password"
+          />
+        </div>
         <button type="submit">Login</button>
       </form>
     </>
