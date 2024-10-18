@@ -25,3 +25,14 @@ class AddMembers(BaseModel):
 
     class Config:
         from_attributes = True  # For compatibility with SQLAlchemy models
+
+
+class AddExpenses(BaseModel):
+    project_id: int = Field(..., gt=0)
+    member_id: int = Field(..., gt=0)
+    expense_name: str = Field(..., min_length=1, max_length=255)
+    amount: int = Field(..., gt=0)
+    expense_date: date | None = None
+
+    class Config:
+        from_attributes = True  # Updated for Pydantic v2

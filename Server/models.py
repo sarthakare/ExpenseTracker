@@ -12,10 +12,13 @@ class User(Base):
     password = Column(String(60))
 
     # Projects related to the user
-    projects = relationship("Projects", back_populates="admin")  # Use string 'Projects'
+    projects = relationship("Projects", back_populates="admin")
 
     # Projects a user is a member of
     member_projects = relationship("Members", back_populates="member")
+
+    # Expenses added by the user
+    expenses = relationship("Expenses", back_populates="member")
 
 
 # Project model
@@ -29,10 +32,13 @@ class Projects(Base):
     end_date = Column(Date, nullable=True)  # Optional
 
     # Relationship to the User (admin)
-    admin = relationship("User", back_populates="projects")  # Use string 'User'
+    admin = relationship("User", back_populates="projects")
 
     # Members associated with this project
     members = relationship("Members", back_populates="project")
+
+    # Expenses related to this project
+    expenses = relationship("Expenses", back_populates="project")
 
 
 # Members model (Association Table for Projects and Users)
@@ -52,3 +58,22 @@ class Members(Base):
 
     # Relationship to the User
     member = relationship("User", back_populates="member_projects")
+
+
+# Expenses model (Tracks expenses added by members to a project)
+class Expenses(Base):
+    __tablename__ = "expenses"
+
+    id = Column(Integer, primary_key=True, index=True)  # Unique identifier for each expense
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
+    member_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    expense_name = Column(String(255), nullable=False)
+    amount = Column(Integer, nullable=False)
+    expense_date = Column(Date, nullable=True)  # Ensure this is nullable
+
+    # Relationship to the Project
+    project = relationship("Projects", back_populates="expenses")
+
+    # Relationship to the User (Member who added the expense)
+    member = relationship("User", back_populates="expenses")
+

@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 
 from database import SessionLocal, create_tables
-from models import User, Projects, Members
-from schemas import UserCreate, ProjectCreate, AddMembers
+from models import User, Projects, Members, Expenses
+from schemas import UserCreate, ProjectCreate, AddMembers, AddExpenses
 
 # FastAPI app
 app = FastAPI()
@@ -103,7 +103,7 @@ def read_all_projects(skip: int = 0, limit: int = 100, db: Session = Depends(get
     return db.query(Projects).offset(skip).limit(limit).all()
 
 
-# Projects Creation
+# Members Creation
 @app.post("/members/")
 def create_members(members: AddMembers, db: Session = Depends(get_db)):
     db_members = Members(
@@ -114,3 +114,19 @@ def create_members(members: AddMembers, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_members)
     return db_members
+
+# Expenses Creation
+@app.post("/expenses/")
+def create_expenses(expenses: AddExpenses, db: Session = Depends(get_db)):
+    db_expenses = Expenses(
+        project_id=expenses.project_id, 
+        member_id=expenses.member_id,
+        expense_name=expenses.expense_name,
+        amount=expenses.amount, 
+        expense_date=expenses.expense_date
+    )
+    db.add(db_expenses)
+    db.commit()
+    db.refresh(db_expenses)
+    return db_expenses
+
