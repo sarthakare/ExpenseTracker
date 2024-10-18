@@ -1,12 +1,14 @@
 import { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 function Projects() {
   const [projectName, setProjectName] = useState("");
   const [projectAdminId, setProjectAdminId] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,6 +28,7 @@ function Projects() {
       setProjectAdminId("");
       setStartDate("");
       setEndDate("");
+      navigate("/members")
     } catch (err) {
       if (err.response && err.response.data) {
         toast.error(err.response.data.detail + " Project creation failed!");

@@ -17,3 +17,11 @@ class ProjectCreate(BaseModel):
 
     class Config:
         from_attributes = True  # Updated for Pydantic v2
+
+
+class AddMembers(BaseModel):
+    project_id: int = Field(..., gt=0)  # Ensure project_id is a positive integer
+    member_id: int = Field(..., gt=0)   # Ensure member_id is a positive integer
+
+    class Config:
+        from_attributes = True  # For compatibility with SQLAlchemy models

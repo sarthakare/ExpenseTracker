@@ -9,8 +9,8 @@ from sqlalchemy.orm import Session
 from jose import JWTError, jwt
 
 from database import SessionLocal, create_tables
-from models import User, Projects
-from schemas import UserCreate, ProjectCreate
+from models import User, Projects, Members
+from schemas import UserCreate, ProjectCreate, AddMembers
 
 # FastAPI app
 app = FastAPI()
@@ -91,3 +91,26 @@ def create_projects(project: ProjectCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_project)
     return db_project
+
+# Get all users
+@app.get("/users/")
+def read_all_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return db.query(User).offset(skip).limit(limit).all()
+
+# Get all users
+@app.get("/projects/")
+def read_all_projects(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return db.query(Projects).offset(skip).limit(limit).all()
+
+
+# Projects Creation
+@app.post("/members/")
+def create_members(members: AddMembers, db: Session = Depends(get_db)):
+    db_members = Members(
+        project_id=members.project_id, 
+        member_id=members.member_id  # Correct attribute name
+    )
+    db.add(db_members)
+    db.commit()
+    db.refresh(db_members)
+    return db_members

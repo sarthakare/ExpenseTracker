@@ -1,5 +1,4 @@
-# models.py
-from sqlalchemy import Column, Integer, String, ForeignKey, Date
+from sqlalchemy import Column, Integer, String, ForeignKey, Date, PrimaryKeyConstraint
 from sqlalchemy.orm import relationship
 from base import Base
 
@@ -15,6 +14,10 @@ class User(Base):
     # Projects related to the user
     projects = relationship("Projects", back_populates="admin")  # Use string 'Projects'
 
+    # Projects a user is a member of
+    member_projects = relationship("Members", back_populates="member")
+
+
 # Project model
 class Projects(Base):
     __tablename__ = "projects"
@@ -27,3 +30,25 @@ class Projects(Base):
 
     # Relationship to the User (admin)
     admin = relationship("User", back_populates="projects")  # Use string 'User'
+
+    # Members associated with this project
+    members = relationship("Members", back_populates="project")
+
+
+# Members model (Association Table for Projects and Users)
+class Members(Base):
+    __tablename__ = "members"
+
+    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
+    member_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    # Set both project_id and member_id as primary key (composite primary key)
+    __table_args__ = (
+        PrimaryKeyConstraint("project_id", "member_id"),
+    )
+
+    # Relationship to the Project
+    project = relationship("Projects", back_populates="members")
+
+    # Relationship to the User
+    member = relationship("User", back_populates="member_projects")
