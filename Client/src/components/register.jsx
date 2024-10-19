@@ -20,6 +20,7 @@ function RegisterUser() {
         email,
         password,
       });
+      localStorage.setItem("email", email);
       toast("Registration successful.");
       navigate("/projects");
     } catch (err) {

@@ -1,21 +1,47 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 
 function Projects() {
   const [projectName, setProjectName] = useState("");
-  const [projectAdminId, setProjectAdminId] = useState("");
+  const [projectAdminId, setProjectAdminId] = useState(""); // Admin ID will be set from database
+  const [projectAdminName, setProjectAdminName] = useState(""); // Admin ID will be set from database
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
   const navigate = useNavigate();
+
+  // Retrieve admin email from local storage and fetch the admin ID
+  useEffect(() => {
+    const email = localStorage.getItem("email");
+  
+    // Fetch the user ID based on the admin email
+    const fetchAdminId = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:8000/users/email/${email}`
+        );
+        const userId = response.data.id; // Assuming your backend returns {id: adminId}
+        setProjectAdminId(userId); // Set the admin ID
+        const userName = response.data.name; // Assuming your backend returns {id: adminId}
+        setProjectAdminName(userName); // Set the admin ID
+      } catch (error) {
+        toast.error("Failed to fetch admin ID. "+ error);
+      }
+    };
+
+    if (email) {
+      fetchAdminId();
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const projectData = {
       project_name: projectName, // Backend expects snake_case keys
-      project_admin_id: projectAdminId,
+      project_admin_id: projectAdminId, // Filled automatically
       start_date: startDate,
       end_date: endDate || null, // End date can be optional
     };
@@ -25,10 +51,9 @@ function Projects() {
       toast.success("Project created successfully");
       // Reset form
       setProjectName("");
-      setProjectAdminId("");
       setStartDate("");
       setEndDate("");
-      navigate("/members")
+      navigate("/members");
     } catch (err) {
       if (err.response && err.response.data) {
         toast.error(err.response.data.detail + " Project creation failed!");
@@ -56,8 +81,15 @@ function Projects() {
           <input
             type="number"
             value={projectAdminId}
-            onChange={(e) => setProjectAdminId(e.target.value)}
-            required
+            disabled // Make this field disabled since it's fetched automatically
+          />
+        </div>
+        <div>
+          <label>Project Admin Name:</label>
+          <input
+            type="text"
+            value={projectAdminName}
+            disabled 
           />
         </div>
         <div>

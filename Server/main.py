@@ -97,11 +97,19 @@ def create_projects(project: ProjectCreate, db: Session = Depends(get_db)):
 def read_all_users(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return db.query(User).offset(skip).limit(limit).all()
 
-# Get all users
+# Get all projects
 @app.get("/projects/")
 def read_all_projects(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     return db.query(Projects).offset(skip).limit(limit).all()
 
+
+# Get user by email
+@app.get("/users/email/{email}")
+def get_user_by_email(email: str, db: Session = Depends(get_db)):
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"id": user.id, "name": user.name, "email": user.email}
 
 # Members Creation
 @app.post("/members/")

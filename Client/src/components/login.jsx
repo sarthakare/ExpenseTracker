@@ -12,7 +12,7 @@ function Login() {
     e.preventDefault();
     try {
       const formData = new URLSearchParams();
-      formData.append("username", email); // OAuth2PasswordRequestForm expects 'username' as the key
+      formData.append("username", email);
       formData.append("password", password);
 
       const response = await axios.post(
@@ -26,6 +26,7 @@ function Login() {
       );
 
       localStorage.setItem("token", response.data.access_token);
+      localStorage.setItem("email", email);
       toast("Login successful!");
       navigate("/projects");
     } catch (error) {
