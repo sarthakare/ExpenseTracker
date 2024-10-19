@@ -22,10 +22,10 @@ function Projects() {
         const response = await axios.get(
           `http://localhost:8000/users/email/${email}`
         );
-        const userId = response.data.id; // Assuming your backend returns {id: adminId}
-        setProjectAdminId(userId); // Set the admin ID
-        const userName = response.data.name; // Assuming your backend returns {id: adminId}
-        setProjectAdminName(userName); // Set the admin ID
+        const userId = response.data.id;
+        setProjectAdminId(userId);
+        const userName = response.data.name; 
+        setProjectAdminName(userName); 
       } catch (error) {
         toast.error("Failed to fetch admin ID. "+ error);
       }
@@ -81,7 +81,7 @@ function Projects() {
           <input
             type="number"
             value={projectAdminId}
-            disabled // Make this field disabled since it's fetched automatically
+            disabled
           />
         </div>
         <div>
