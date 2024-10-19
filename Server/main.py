@@ -149,6 +149,18 @@ def create_members(members: AddMembers, db: Session = Depends(get_db)):
     db.refresh(db_members)
     return db_members
 
+# Get all projects assigned to a specific user
+@app.get("/users/{user_id}/projects")
+def get_projects_for_user(user_id: int, db: Session = Depends(get_db)):
+    # Query the Members table to find all projects where the user is a member
+    assigned_projects = db.query(Projects).join(Members, Projects.id == Members.project_id).filter(Members.member_id == user_id).all()
+    
+    if not assigned_projects:
+        raise HTTPException(status_code=404, detail="No projects found for this user")
+    
+    return assigned_projects
+
+
 # Expenses Creation
 @app.post("/expenses/")
 def create_expenses(expenses: AddExpenses, db: Session = Depends(get_db)):

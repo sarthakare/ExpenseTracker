@@ -4,38 +4,39 @@ import toast from "react-hot-toast";
 
 const Expenses = () => {
   const [projects, setProjects] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [selectedProjectId, setSelectedProjectId] = useState("");
-  const [selectedMemberId, setSelectedMemberId] = useState("");
-  const [expenseName, setExpenseName] = useState("");
-  const [amount, setAmount] = useState("");
-  const [date, setDate] = useState("");
+  const [user, setUser] = useState({});
+  const [selectedProjectId, setSelectedProjectId] = useState(""); // Initialize as empty string
+  const [expenseName, setExpenseName] = useState(""); // Initialize as empty string
+  const [amount, setAmount] = useState(""); // Initialize as empty string
+  const [date, setDate] = useState(""); // Initialize as empty string
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
-    const fetchProjects = async () => {
+    const email = localStorage.getItem("email");
+
+    const fetchUserData = async () => {
       try {
-        const response = await axios.get("http://localhost:8000/projects");
-        setProjects(response.data);
+        // Fetch user details by email
+        const userResponse = await axios.get(
+          `http://localhost:8000/users/email/${email}`
+        );
+        setUser(userResponse.data);
+
+        // Fetch the projects assigned to this user
+        const projectsResponse = await axios.get(
+          `http://localhost:8000/users/${userResponse.data.id}/projects`
+        );
+        setProjects(projectsResponse.data);
       } catch (error) {
-        console.error("Error fetching projects:", error);
-        toast.error("Failed to load projects.");
+        console.error("Error fetching data:", error);
+        toast.error("Failed to load user or project data.");
       }
     };
 
-    const fetchUsers = async () => {
-      try {
-        const response = await axios.get("http://localhost:8000/users");
-        setUsers(response.data);
-      } catch (error) {
-        console.error("Error fetching users:", error);
-        toast.error("Failed to load users.");
-      }
-    };
-
-    fetchProjects();
-    fetchUsers();
+    if (email) {
+      fetchUserData();
+    }
   }, []);
 
   const handleSubmit = async (e) => {
@@ -44,33 +45,31 @@ const Expenses = () => {
     setSuccess("");
     setError("");
 
-    if (!expenseName || !amount || !date) {
+    if (!expenseName || !amount || !date || !user.id || !projects.length) {
       setError("Please fill out all fields.");
       return;
     }
 
     try {
       await axios.post("http://localhost:8000/expenses", {
-        project_id: selectedProjectId,
-        member_id: selectedMemberId,
+        project_id: selectedProjectId, // Make sure selectedProjectId is controlled
+        member_id: user.id, // Set the current logged-in user as the member
         expense_name: expenseName,
         amount: parseFloat(amount),
         expense_date: date || null,
       });
 
       setSuccess("Expense added successfully!");
-      setExpenseName("");
-      setAmount("");
-      setDate("");
-      setSelectedProjectId("");
-      setSelectedMemberId("");
+      setExpenseName(""); // Reset field after submission
+      setAmount(""); // Reset field after submission
+      setDate(""); // Reset field after submission
+      setSelectedProjectId(""); // Reset field after submission
     } catch (err) {
       setError(
         "Failed to add expense. " + (err.response?.data?.detail || err.message)
       );
     }
   };
-
 
   return (
     <div>
@@ -79,9 +78,13 @@ const Expenses = () => {
       {success && <p style={{ color: "green" }}>{success}</p>}
       <form onSubmit={handleSubmit}>
         <div>
+          <label>Member:</label>
+          <input type="text" value={user.name || ""} disabled />{" "}
+        </div>
+        <div>
           <label>Project:</label>
           <select
-            value={selectedProjectId}
+            value={selectedProjectId || ""} // Ensure `value` is always defined
             onChange={(e) => setSelectedProjectId(e.target.value)}
             required
           >
@@ -94,42 +97,30 @@ const Expenses = () => {
           </select>
         </div>
         <div>
-          <label>Member:</label>
-          <select
-            value={selectedMemberId}
-            onChange={(e) => setSelectedMemberId(e.target.value)}
-            required
-          >
-            <option value="">Select a member</option>
-            {users.map((user) => (
-              <option key={user.id} value={user.id}>
-                {user.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
           <label>Expense Name:</label>
           <input
             type="text"
-            value={expenseName}
+            value={expenseName} // Ensure `value` is always controlled
             onChange={(e) => setExpenseName(e.target.value)}
+            required
           />
         </div>
         <div>
           <label>Amount:</label>
           <input
             type="number"
-            value={amount}
+            value={amount} // Ensure `value` is always controlled
             onChange={(e) => setAmount(e.target.value)}
+            required
           />
         </div>
         <div>
           <label>Date:</label>
           <input
             type="date"
-            value={date}
+            value={date} // Ensure `value` is always controlled
             onChange={(e) => setDate(e.target.value)}
+            required
           />
         </div>
         <button type="submit">Add Expense</button>
