@@ -59,6 +59,10 @@ def create_access_token(data: dict):
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
+@app.get('/')
+async def connectionCheck():
+    return "connection to vercel is successful.!"
+
 # User registration
 @app.post("/users/")
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
