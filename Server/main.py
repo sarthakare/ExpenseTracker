@@ -111,12 +111,38 @@ def get_user_by_email(email: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User not found")
     return {"id": user.id, "name": user.name, "email": user.email}
 
-# Members Creation
+# Get members by project ID
+@app.get("/projects/{project_id}/members")
+def get_members_by_project(project_id: int, db: Session = Depends(get_db)):
+    project = db.query(Projects).filter(Projects.id == project_id).first()
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    # Query to get all members of the project
+    project_members = db.query(Members).filter(Members.project_id == project_id).all()
+
+    if not project_members:
+        raise HTTPException(status_code=404, detail="No members found for this project")
+
+    # Return only the member IDs or you can return more details as required
+    return [{"member_id": member.member_id} for member in project_members]
+
+# Modify Members Creation - Check if member already exists in the project
 @app.post("/members/")
 def create_members(members: AddMembers, db: Session = Depends(get_db)):
+    # Check if the member is already assigned to the project
+    existing_member = db.query(Members).filter(
+        Members.project_id == members.project_id,
+        Members.member_id == members.member_id
+    ).first()
+
+    if existing_member:
+        raise HTTPException(status_code=400, detail="Member is already assigned to this project.")
+
+    # Add the member to the project if not already added
     db_members = Members(
         project_id=members.project_id, 
-        member_id=members.member_id  # Correct attribute name
+        member_id=members.member_id
     )
     db.add(db_members)
     db.commit()

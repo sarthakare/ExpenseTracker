@@ -9,6 +9,7 @@ function Members() {
   const [projectAdminName, setProjectAdminName] = useState("");
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [selectedMemberId, setSelectedMemberId] = useState("");
+  const [assignedMembers, setAssignedMembers] = useState([]);
 
   useEffect(() => {
     const email = localStorage.getItem("email");
@@ -19,9 +20,9 @@ function Members() {
         const response = await axios.get(
           `http://localhost:8000/users/email/${email}`
         );
-        const userId = response.data.id; // Assuming your backend returns {id: adminId}
+        const userId = response.data.id; 
         setProjectAdminId(userId); // Set the admin ID
-        const userName = response.data.name; // Assuming your backend returns {name: adminName}
+        const userName = response.data.name; 
         setProjectAdminName(userName); // Set the admin name
       } catch (error) {
         toast.error("Failed to fetch admin ID. " + error);
@@ -56,6 +57,26 @@ function Members() {
     fetchUsers();
   }, []);
 
+  // Fetch members assigned to the selected project
+  useEffect(() => {
+    const fetchAssignedMembers = async () => {
+      if (selectedProjectId) {
+        try {
+          const response = await axios.get(
+            `http://localhost:8000/projects/${selectedProjectId}/members`
+          );
+          setAssignedMembers(response.data); 
+        } catch (error) {
+          toast.error("None assigned members. " + error);
+        }
+      } else {
+        setAssignedMembers([]);
+      }
+    };
+
+    fetchAssignedMembers();
+  }, [selectedProjectId]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -67,6 +88,11 @@ function Members() {
       toast.success("Member added successfully!");
       setSelectedProjectId("");
       setSelectedMemberId("");
+      // Fetch the updated list of assigned members after adding a new member
+      const response = await axios.get(
+        `http://localhost:8000/projects/${selectedProjectId}/members`
+      );
+      setAssignedMembers(response.data);
     } catch (error) {
       console.error("Error adding member:", error);
       toast.error("Failed to add member.");
@@ -78,9 +104,11 @@ function Members() {
     (project) => project.project_admin_id === projectAdminId
   );
 
-  // Filter the members to exclude the current admin (admin should not be selectable as a member)
+  // Filter the members to exclude the current admin and already assigned members
   const filteredMembers = members.filter(
-    (member) => member.id !== projectAdminId // Assuming `id` is the correct property for members
+    (member) =>
+      member.id !== projectAdminId &&
+      !assignedMembers.some((m) => m.member_id === member.id)
   );
 
   return (
@@ -121,14 +149,26 @@ function Members() {
             {filteredMembers.map((member) => (
               <option key={member.id} value={member.id}>
                 {member.name}{" "}
-                {/* Assuming 'name' is the correct field for display */}
               </option>
             ))}
           </select>
         </div>
-
         <button type="submit">Add Member</button>
       </form>
+
+      <h3>Assigned Members</h3>
+      {assignedMembers.length > 0 ? (
+        <ul>
+          {assignedMembers.map((member) => (
+            <li key={member.member_id}>
+              {member.member_id}{" "}
+              {/* Change this to display member name if needed */}
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p>No members assigned yet.</p>
+      )}
     </div>
   );
 }
