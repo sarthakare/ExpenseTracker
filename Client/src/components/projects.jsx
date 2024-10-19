@@ -15,7 +15,7 @@ function Projects() {
   // Retrieve admin email from local storage and fetch the admin ID
   useEffect(() => {
     const email = localStorage.getItem("email");
-  
+
     // Fetch the user ID based on the admin email
     const fetchAdminId = async () => {
       try {
@@ -24,8 +24,8 @@ function Projects() {
         );
         const userId = response.data.id;
         setProjectAdminId(userId);
-        const userName = response.data.name; 
-        setProjectAdminName(userName); 
+        const userName = response.data.name;
+        setProjectAdminName(userName);
       } catch (error) {
         toast.error("Failed to fetch admin ID. "+ error);
       }
@@ -47,8 +47,22 @@ function Projects() {
     };
 
     try {
-      await axios.post("http://localhost:8000/projects", projectData);
+      // Create the project
+      const projectResponse = await axios.post(
+        "http://localhost:8000/projects",
+        projectData
+      );
       toast.success("Project created successfully");
+
+      // Now add the admin as a member of the project
+      const memberData = {
+        project_id: projectResponse.data.id, // Assuming the created project returns its ID
+        member_id: projectAdminId, // The admin ID
+      };
+
+      await axios.post("http://localhost:8000/members", memberData);
+      toast.success("Admin added as a member successfully!");
+
       // Reset form
       setProjectName("");
       setStartDate("");
@@ -78,19 +92,11 @@ function Projects() {
         </div>
         <div>
           <label>Project Admin ID:</label>
-          <input
-            type="number"
-            value={projectAdminId}
-            disabled
-          />
+          <input type="number" value={projectAdminId} disabled />
         </div>
         <div>
           <label>Project Admin Name:</label>
-          <input
-            type="text"
-            value={projectAdminName}
-            disabled 
-          />
+          <input type="text" value={projectAdminName} disabled />
         </div>
         <div>
           <label>Start Date:</label>
@@ -116,3 +122,4 @@ function Projects() {
 }
 
 export default Projects;
+
